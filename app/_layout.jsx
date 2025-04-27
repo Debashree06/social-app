@@ -1,0 +1,53 @@
+import { View, Text } from "react-native";
+import React, { useEffect } from "react";
+import { router, Stack } from "expo-router";
+import { AuthProvider, useAuth } from "../context/AuthContext";
+import { supabase } from "../lib/supabase";
+import { getUserData } from "../services/userService";
+
+const _layout = () => {
+  return (
+    <AuthProvider>
+      <MainLayout />
+    </AuthProvider>
+  );
+};
+
+const MainLayout = () => {
+  const { setAuth , setUserData} = useAuth();
+
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("session user", session?.user?.id);
+
+      if (session) {
+        //set auth
+        setAuth(session?.user);
+        updateUserData(session?.user);
+        //move to home screen
+        router.replace("/home");
+      } else {
+        //set auth null
+        setAuth(null);
+        //move to welcome screen
+        router.replace("/welcome");
+      }
+    });
+  }, []);
+
+  const updateUserData = async (user) => {
+    let res = await getUserData(user?.id);
+    if(res.success) setUserData(res.data)
+    // console.log("user details.....", res);
+  };
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    />
+  );
+};
+
+export default _layout;

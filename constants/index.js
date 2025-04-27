@@ -1,0 +1,3 @@
+export const supabaseUrl = 'https://drlmbgcwuxyletfvdimh.supabase.co';
+
+export const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRybG1iZ2N3dXh5bGV0ZnZkaW1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU2MDEwMTMsImV4cCI6MjA2MTE3NzAxM30.cKhbGv2zvl2C2wsNFZJFvfNu6FSNHvmawWVDVf9yEMA'

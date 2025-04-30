@@ -20,7 +20,6 @@ import Button from "../../components/Button";
 import { updateUser } from "../../services/userService";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { use } from "react";
 
 const EditProfile = () => {
   const { user: currentUser, setUserData } = useAuth();

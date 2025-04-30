@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
 
   // Function to update user data
   const setUserData = (userData) => {
+    console.log("old user", user)
     setUser({...userData})
   };
 

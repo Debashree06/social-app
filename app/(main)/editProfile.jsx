@@ -1,4 +1,11 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { hp, wp } from "../../helpers/common";
@@ -7,11 +14,19 @@ import Header from "../../components/Header";
 import Icon from "../../assets/icons";
 import Input from "../../components/input";
 import { useAuth } from "../../context/AuthContext";
-import { getUserImageSrc } from "../../services/imageService";
+import { getUserImageSrc, uploadFile } from "../../services/imageService";
 import { Image } from "expo-image";
+import Button from "../../components/Button";
+import { updateUser } from "../../services/userService";
+import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { use } from "react";
 
 const EditProfile = () => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, setUserData } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
   const [user, setUser] = useState({
     name: "",
     phoneNumber: "",
@@ -29,13 +44,54 @@ const EditProfile = () => {
         bio: currentUser.bio || "",
       });
     }
-  },[currentUser]);
+  }, [currentUser]);
 
   const onPickImage = async () => {
-    //function
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setUser({ ...user, image: result.assets[0] });
+    }
   };
 
-  let imageSource = getUserImageSrc(user.image);
+  const onSubmit = async () => {
+    let userData = { ...user };
+    let { name, phoneNumber, address, image, bio } = userData;
+    if (!name || !phoneNumber || !address || !bio || !image) {
+      Alert.alert("Profile", "Please fill all the fields");
+      return;
+    }
+    setLoading(true);
+    //update user
+
+    if(typeof image == 'object'){
+       //upload image
+       let imageRes = await uploadFile('profiles', image?.uri , true)
+       if(imageRes.success) userData.image = imageRes.data;
+       else userData.image = null;
+    }
+
+    const res = await updateUser(currentUser?.id, userData);
+    setLoading(false);
+
+    if (res.success) {
+      setUserData({ ...currentUser, ...userData });
+      router.back();
+    }
+
+    console.log("update user data", res);
+  };
+
+  //if you don't have localImage than default image will be shown
+  let imageSource =
+    user.image && typeof user.image == "object"
+      ? user.image.uri
+      : getUserImageSrc(user.image);
 
   return (
     <ScreenWrapper bg="white">
@@ -60,21 +116,21 @@ const EditProfile = () => {
               icon={<Icon name="user" size={20} strokeWidth={2.5} />}
               placeholder="Enter your name"
               value={user.name}
-              onChangeText={(value) => setUser({...user , name:value})}
+              onChangeText={(value) => setUser({ ...user, name: value })}
             />
 
             <Input
               icon={<Icon name="call" size={20} strokeWidth={2.5} />}
               placeholder="Enter your phone number"
               value={user.phoneNumber}
-              onChangeText={(value) => setUser({...user , phoneNumber:value})}
+              onChangeText={(value) => setUser({ ...user, phoneNumber: value })}
             />
 
             <Input
               icon={<Icon name="location" size={20} strokeWidth={2.5} />}
               placeholder="Enter your address"
               value={user.address}
-              onChangeText={(value) => setUser({...user , address:value})}
+              onChangeText={(value) => setUser({ ...user, address: value })}
             />
 
             <Input
@@ -82,8 +138,10 @@ const EditProfile = () => {
               value={user.bio}
               multiline={true}
               containerStyle={styles.bio}
-              onChangeText={(value) => setUser({...user , name:value})}
+              onChangeText={(value) => setUser({ ...user, bio: value })}
             />
+
+            <Button title="Update" loading={loading} onPress={onSubmit} />
           </View>
         </ScrollView>
       </View>

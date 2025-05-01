@@ -83,7 +83,7 @@ const EditProfile = () => {
       router.back();
     }
 
-    console.log("update user data", res);
+    // console.log("update user data", res);
   };
 
   //if you don't have localImage than default image will be shown

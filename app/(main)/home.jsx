@@ -12,7 +12,7 @@ import Avatar from '../../components/Avatar'
 const Home = () => {
 const router = useRouter()
     const {user, setAuth} = useAuth();
-    console.log("user details", user)
+    // console.log("user details", user)
 
     // const onLogout = async() => {
     //     const {error} = await supabase.auth.signOut();

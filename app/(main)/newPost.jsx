@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Pressable,
+  Alert,
 } from "react-native";
 import React, { useRef, useState } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
@@ -20,6 +21,8 @@ import Icon from "../../assets/icons";
 import Button from "../../components/Button";
 import * as ImagePicker from "expo-image-picker";
 import { getSupabaseFileUrl } from "../../services/imageService";
+import { Video } from 'expo-av';
+import { createOrUpdatePost } from "../../services/postService";
 
 const NewPost = () => {
   const { user } = useAuth();
@@ -30,24 +33,19 @@ const NewPost = () => {
   const [file, setFile] = useState(file);
 
   const onPick = async (isImage) => {
-    const mediaConfig = {
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7,
-    };
-
-    if (!isImage) {
-      mediaConfig = {
-        mediaTypes: ["videos"],
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: isImage ? "Images" : "Videos", // ✅ new API
         allowsEditing: true,
-      };
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync(mediaConfig);
-
-    if (!result.canceled) {
-      setFile(result.assets[0]);
+        aspect: [4, 3],
+        quality: 0.7,
+      });
+  
+      if (!result.canceled) {
+        setFile(result.assets[0]); // ✅ stores selected file
+      }
+    } catch (error) {
+      console.error("Error picking file:", error);
     }
   };
 
@@ -81,7 +79,33 @@ const NewPost = () => {
     return getSupabaseFileUrl(file)?.uri
   }
 
-  const onSubmit = async () => {};
+  const onSubmit = async () => {
+   if(!bodyRef.current && !file){
+    Alert.alert('Post', "please choose an image or add post body");
+    return;
+   }
+
+   let data = {
+    file,
+    body: bodyRef.current,
+    userId: user?.id
+   }
+
+   //create post
+   setLoading(true);
+   let res = await createOrUpdatePost(data);
+   setLoading(false);
+  //  console.log("post res: ", res)
+
+  if(res.success){
+    setFile(null);
+    bodyRef.current="";
+    editorRef.current?.setContentHTML('');
+    router.back()
+  }else{
+    Alert.alert('Post', res.msg)
+  }
+  };
 
   return (
     <ScreenWrapper bg="white">
@@ -113,7 +137,15 @@ const NewPost = () => {
             <View style={styles.file}>
               {getFileType(file) == "video" ? 
               ( 
-              <></>
+             <Video
+             style={{flex:1}}
+             source={{
+              uri: getFileUri(file)
+             }}
+             useNativeControls
+             resizeMode="cover"
+             isLooping
+             />
               ):( 
               <Image source={{uri: getFileUri(file)}} resizeMode="cover" style={{flex:1}}/>
               )}
@@ -132,9 +164,9 @@ const NewPost = () => {
                 <Icon name="image" size={30} color={theme.colors.dark} />
               </TouchableOpacity>
 
-              {/* <TouchableOpacity onPress={() => onPick(false)}>
+              <TouchableOpacity onPress={() => onPick(false)}>
                 <Icon name="video" size={33} color={theme.colors.dark} />
-              </TouchableOpacity> */}
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>

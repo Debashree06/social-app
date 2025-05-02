@@ -19,25 +19,49 @@ import Avatar from "../../components/Avatar";
 import { fetchPost } from "../../services/postService";
 import PostCard from "../../components/PostCard";
 import Loading from "../../components/Loading";
+import {getUserData} from "../../services/userService"
 
 var limit = 0;
 
 const Home = () => {
   const router = useRouter();
   const { user, setAuth } = useAuth();
+
   const [posts, setPosts] = useState([]);
+  const[hasMore, setHasMore] = useState(true)
+
+  const handlePostEvent= async(payload)=>{
+   if(payload.eventType == 'INSERT' && payload?.new?.id) {
+    let newPost = {...payload.new};
+    let res = await getUserData(newPost.userId);
+    newPost.user = res.success? res.data : {};
+    setPosts(prevPosts => [newPost, ...prevPosts])
+   }
+  }
 
   useEffect(() => {
-    getPosts();
-  });
+
+    let postChannel = supabase
+    .channel('posts')
+    .on('postgres_changes', {event: '*', schema: 'public', table:'posts'},handlePostEvent)
+    .subscribe();
+
+    // getPosts();
+
+    return()=>{
+      supabase.removeChannel(postChannel)
+    }
+  },[]);
 
   const getPosts = async () => {
     //call the api here
-    limit = limit + 10;
-    let res = await fetchPost(limit);
-    // console.log("all post", res);
 
+    if(!hasMore) return null;
+    limit = limit + 4;
+    console.log("all post", limit);
+    let res = await fetchPost(limit);
     if (res.success) {
+      if(posts.length==res.data.length) setHasMore(false)
       setPosts(res.data);
     }
   };
@@ -86,10 +110,20 @@ const Home = () => {
             <PostCard item={item} currentUser={user} router={router} />
           }
 
-          ListFooterComponent={(
+          onEndReached={()=>{
+            getPosts();
+            console.log("got to the end")
+          }}
+
+          onEndReachedThreshold={0}
+          ListFooterComponent={ hasMore? (
             <View style={{marginVertical: posts.length==0?200: 30}}>
               <Loading/>
               </View>
+          ):(
+           <View style={{marginVertical: 30}}>
+            <Text style={styles.noPosts}>No more posts</Text>
+           </View> 
           )}
         />
       </View>

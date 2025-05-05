@@ -77,7 +77,7 @@ const Home = () => {
     //call the api here
 
     if (!hasMore) return null;
-    limit = limit + 4;
+    limit = limit + 10;
     console.log("all post", limit);
     let res = await fetchPost(limit);
     if (res.success) {
@@ -141,7 +141,7 @@ const Home = () => {
               </View>
             ) : (
               <View style={{ marginVertical: 30 }}>
-                <Text style={styles.noPosts}>No more posts</Text>
+                <Text style={styles.noPosts}>No more posts !!</Text>
               </View>
             )
           }

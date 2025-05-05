@@ -18,8 +18,11 @@ import { supabase } from "../../lib/supabase";
 import Avatar from "../../components/Avatar";
 
 const Profile = () => {
-  const router = useRouter();
   const { user, setAuth } = useAuth();
+  const router = useRouter();
+
+  const [posts, setPosts] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
   // console.log("user details", user);
 
   const onLogout = async () => {
@@ -93,20 +96,16 @@ const UserHeader = ({ user, router, handleLogout }) => {
               <Icon name="mail" size={20} color={theme.colors.textLight} />
               <Text style={styles.infoText}>{user && user.email}</Text>
             </View>
-           {
-            user && user.phoneNumber && (
+            {user && user.phoneNumber && (
               <View style={styles.info}>
-              <Icon name="call" size={20} color={theme.colors.textLight} />
-              <Text style={styles.infoText}>{user && user.phoneNumber}</Text>
-            </View>
-            )
-           }
+                <Icon name="call" size={20} color={theme.colors.textLight} />
+                <Text style={styles.infoText}>{user && user.phoneNumber}</Text>
+              </View>
+            )}
 
-           {
-             user && user.bio && (
+            {user && user.bio && (
               <Text style={styles.infoText}>{user.bio}</Text>
-             )
-           }
+            )}
           </View>
         </View>
       </View>

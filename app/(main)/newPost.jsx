@@ -8,7 +8,7 @@ import {
   Pressable,
   Alert,
 } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import Header from "../../components/Header";
 import { hp, wp } from "../../helpers/common";
@@ -16,21 +16,33 @@ import { theme } from "../../constants/theme";
 import { useAuth } from "../../context/AuthContext";
 import Avatar from "../../components/Avatar";
 import RichTextEditor from "../../components/RichTextEditor";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "../../assets/icons";
 import Button from "../../components/Button";
 import * as ImagePicker from "expo-image-picker";
 import { getSupabaseFileUrl } from "../../services/imageService";
-import { Video } from 'expo-av';
+import { Video } from "expo-av";
 import { createOrUpdatePost } from "../../services/postService";
 
 const NewPost = () => {
+  const post = useLocalSearchParams();
+ // console.log("post: ", post);
   const { user } = useAuth();
   const bodyRef = useRef("");
   const editorRef = useRef(null);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(file);
+
+  useEffect(() => {
+    if (post && post.id) {
+      bodyRef.current = post.body;
+      setFile(post.file || null);
+      setTimeout(() => {
+        editorRef?.current?.setContentHTML(post.body);
+      }, 300);
+    }
+  });
 
   const onPick = async (isImage) => {
     try {
@@ -40,7 +52,7 @@ const NewPost = () => {
         aspect: [4, 3],
         quality: 0.7,
       });
-  
+
       if (!result.canceled) {
         setFile(result.assets[0]); // ✅ stores selected file
       }
@@ -69,42 +81,43 @@ const NewPost = () => {
     return "video";
   };
 
-
-  const getFileUri = file =>{
-    if(!file) return null;
+  const getFileUri = (file) => {
+    if (!file) return null;
     if (isLocalFile(file)) {
       return file.uri;
     }
 
-    return getSupabaseFileUrl(file)?.uri
-  }
+    return getSupabaseFileUrl(file)?.uri;
+  };
 
   const onSubmit = async () => {
-   if(!bodyRef.current && !file){
-    Alert.alert('Post', "please choose an image or add post body");
-    return;
-   }
+    if (!bodyRef.current && !file) {
+      Alert.alert("Post", "please choose an image or add post body");
+      return;
+    }
 
-   let data = {
-    file,
-    body: bodyRef.current,
-    userId: user?.id
-   }
+    let data = {
+      file,
+      body: bodyRef.current,
+      userId: user?.id,
+    };
 
-   //create post
-   setLoading(true);
-   let res = await createOrUpdatePost(data);
-   setLoading(false);
-  //  console.log("post res: ", res)
+    if(post && post.id) data.id=post.id;
 
-  if(res.success){
-    setFile(null);
-    bodyRef.current="";
-    editorRef.current?.setContentHTML('');
-    router.back()
-  }else{
-    Alert.alert('Post', res.msg)
-  }
+    //create post
+    setLoading(true);
+    let res = await createOrUpdatePost(data);
+    setLoading(false);
+    //  console.log("post res: ", res)
+
+    if (res.success) {
+      setFile(null);
+      bodyRef.current = "";
+      editorRef.current?.setContentHTML("");
+      router.back();
+    } else {
+      Alert.alert("Post", res.msg);
+    }
   };
 
   return (
@@ -135,23 +148,26 @@ const NewPost = () => {
 
           {file && (
             <View style={styles.file}>
-              {getFileType(file) == "video" ? 
-              ( 
-             <Video
-             style={{flex:1}}
-             source={{
-              uri: getFileUri(file)
-             }}
-             useNativeControls
-             resizeMode="cover"
-             isLooping
-             />
-              ):( 
-              <Image source={{uri: getFileUri(file)}} resizeMode="cover" style={{flex:1}}/>
+              {getFileType(file) == "video" ? (
+                <Video
+                  style={{ flex: 1 }}
+                  source={{
+                    uri: getFileUri(file),
+                  }}
+                  useNativeControls
+                  resizeMode="cover"
+                  isLooping
+                />
+              ) : (
+                <Image
+                  source={{ uri: getFileUri(file) }}
+                  resizeMode="cover"
+                  style={{ flex: 1 }}
+                />
               )}
 
               <Pressable style={styles.closeIcon} onPress={() => setFile(null)}>
-                <Icon  name="delete" size={20} color="white"/>
+                <Icon name="delete" size={20} color="white" />
               </Pressable>
             </View>
           )}
@@ -173,7 +189,7 @@ const NewPost = () => {
 
         <Button
           buttonStyle={{ height: hp(6.2) }}
-          title="Post"
+          title={post && post.id? "Update" : "Post"}
           loading={loading}
           hasShadow={false}
           onPress={onSubmit}
@@ -264,6 +280,6 @@ const styles = StyleSheet.create({
     right: 10,
     padding: 6,
     borderRadius: 50,
-    backgroundColor: 'rgba(255,0,0,0.6)'
+    backgroundColor: "rgba(255,0,0,0.6)",
   },
 });

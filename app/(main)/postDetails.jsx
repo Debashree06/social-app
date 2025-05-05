@@ -13,8 +13,9 @@ import {
   createComment,
   fetchPostDetails,
   removeComment,
+  removePost,
 } from "../../services/postService";
-import {getUserData} from "../../services/userService"
+import { getUserData } from "../../services/userService";
 import { hp, wp } from "../../helpers/common";
 import { theme } from "../../constants/theme";
 import { useAuth } from "../../context/AuthContext";
@@ -37,31 +38,31 @@ const PostDetails = () => {
   // console.log("got post id", postId);
 
   const handleNewComment = async (payload) => {
-    console.log('got new comment', payload.new);
+  //  console.log("got new comment", payload.new);
     if (payload.new) {
       let newComment = { ...payload.new };
       let res = await getUserData(newComment.userId);
       newComment.user = res.success ? res.data : {};
-      setPost(prevPost => {
+      setPost((prevPost) => {
         return {
           ...prevPost,
-          comments: [newComment, ...prevPost.comments]
-        }
+          comments: [newComment, ...prevPost.comments],
+        };
       });
     }
-  }
-  
+  };
+
   useEffect(() => {
     let commentChannel = supabase
       .channel("comments")
       .on(
         "postgres_changes",
         {
-           event: "INSERT", 
-           schema: "public", 
-           table: "comments",
-           filter: `postId=eq.${postId}`
-           },
+          event: "INSERT",
+          schema: "public",
+          table: "comments",
+          filter: `postId=eq.${postId}`,
+        },
         handleNewComment
       )
       .subscribe();
@@ -99,16 +100,8 @@ const PostDetails = () => {
     }
   };
 
-  if (startLoading) {
-    return (
-      <View style={styles.center}>
-        <Loading />
-      </View>
-    );
-  }
-
   const onDeleteComment = async (comment) => {
-    console.log("deleting comment: ", comment);
+   // console.log("deleting comment: ", comment);
     let res = await removeComment(comment?.id);
     if (res.success) {
       setPost((prevPost) => {
@@ -136,6 +129,29 @@ const PostDetails = () => {
     );
   }
 
+  const onDeletePost = async (item) => {
+   // console.log("delete post: ", item)
+    let res = await removePost(post.id);
+    if (res.success) {
+      router.back();
+    } else {
+      Alert.alert("Post", res.msg);
+    }
+  };
+
+  const onEditPost = async (item) => {
+    router.back();
+    router.push({pathname: 'newPost', params: {...item}})
+  };
+
+  if (startLoading) {
+    return (
+      <View style={styles.center}>
+        <Loading />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -147,6 +163,10 @@ const PostDetails = () => {
           currentUser={user}
           router={router}
           hasShadow={false}
+          showMoreIcon={false}
+          showDelete={true}
+          onDelete={onDeletePost}
+          onEdit={onEditPost}
         />
 
         {/* comment input */}

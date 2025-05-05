@@ -5,7 +5,11 @@ import { AuthProvider, useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { getUserData } from "../services/userService";
 
-LogBox.ignoreLogs(['Warning: TNodeChildrenRenderer','Warning: MemoizedTNodeRenderer','Warning: TRenderEngineProvider'])
+LogBox.ignoreLogs([
+  "Warning: TNodeChildrenRenderer",
+  "Warning: MemoizedTNodeRenderer",
+  "Warning: TRenderEngineProvider",
+]);
 
 const _layout = () => {
   return (
@@ -16,7 +20,7 @@ const _layout = () => {
 };
 
 const MainLayout = () => {
-  const { setAuth , setUserData} = useAuth();
+  const { setAuth, setUserData } = useAuth();
 
   useEffect(() => {
     supabase.auth.onAuthStateChange((_event, session) => {
@@ -26,7 +30,7 @@ const MainLayout = () => {
         //set auth
         setAuth(session?.user);
         updateUserData(session?.user, session?.user?.email);
-        console.log("auth user", session?.user?.email)
+        console.log("auth user", session?.user?.email);
         //move to home screen
         router.replace("/home");
       } else {
@@ -38,9 +42,9 @@ const MainLayout = () => {
     });
   }, []);
 
-  const updateUserData = async (user , email) => {
+  const updateUserData = async (user, email) => {
     let res = await getUserData(user?.id);
-    if(res.success) setUserData({...res.data, email})
+    if (res.success) setUserData({ ...res.data, email });
     // console.log("user details.....", res);
   };
 
@@ -49,7 +53,14 @@ const MainLayout = () => {
       screenOptions={{
         headerShown: false,
       }}
-    />
+    >
+      <Stack.Screen
+        name="(main)/postDetails"
+        options={{
+          presentation: "modal",
+        }}
+      />
+    </Stack>
   );
 };
 

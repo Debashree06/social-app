@@ -47,7 +47,9 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
     shadowRadius: 6,
     elevation: 1,
   };
-  const openPostDetails = () => {};
+  const openPostDetails = () => {
+    router.push({pathname: 'postDetails', params: {postId: item?.id}})
+  };
 
   const [likes, setLikes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -104,6 +106,8 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
       setLoading(false); // stop loading
     }
   };
+
+  // console.log("post item : ", item?.comments)
 
   const createdAt = moment(item?.created_at).format("MMM D");
   const liked = likes.filter((like) => like.userId == currentUser?.id)[0]
@@ -184,10 +188,10 @@ const PostCard = ({ item, currentUser, router, hasShadow = true }) => {
         </View>
 
         <View style={styles.footerButton}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={openPostDetails}>
             <Icon name="comment" size={24} color={theme.colors.textLight} />
           </TouchableOpacity>
-          <Text style={styles.count}>{0}</Text>
+          <Text style={styles.count}>{item?.comments[0]?.count}</Text>
         </View>
 
         <View style={styles.footerButton}>

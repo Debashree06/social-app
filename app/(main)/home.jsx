@@ -1,25 +1,23 @@
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
-  Alert,
+  FlatList,
+  Pressable,
   StyleSheet,
   Text,
-  View,
-  Button,
-  Pressable,
-  FlatList,
+  View
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import ScreenWrapper from "../../components/ScreenWrapper";
-import { useAuth } from "../../context/AuthContext";
-import { supabase } from "../../lib/supabase";
-import { hp, wp } from "../../helpers/common";
-import { theme } from "../../constants/theme";
 import Icon from "../../assets/icons";
-import { useRouter } from "expo-router";
 import Avatar from "../../components/Avatar";
-import { fetchPost } from "../../services/postService";
-import PostCard from "../../components/PostCard";
 import Loading from "../../components/Loading";
-import {getUserData} from "../../services/userService"
+import PostCard from "../../components/PostCard";
+import ScreenWrapper from "../../components/ScreenWrapper";
+import { theme } from "../../constants/theme";
+import { useAuth } from "../../context/AuthContext";
+import { hp, wp } from "../../helpers/common";
+import { supabase } from "../../lib/supabase";
+import { fetchPost } from "../../services/postService";
+import { getUserData } from "../../services/userService";
 
 var limit = 0;
 

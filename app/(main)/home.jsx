@@ -109,7 +109,7 @@ const Home = () => {
     <ScreenWrapper bg="white">
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>LinkUp</Text>
+          <Text style={styles.title}>Vibely</Text>
           <View style={styles.icons}>
             <Pressable onPress={() => {
               //when you click the heart to show notification after that the count will be 0

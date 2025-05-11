@@ -25,9 +25,10 @@ import Input from "../../components/input";
 import Icon from "../../assets/icons";
 import CommentItem from "../../components/CommentItem";
 import { supabase } from "../../lib/supabase";
+import { createNotification } from "../../services/notificationService";
 
 const PostDetails = () => {
-  const { postId } = useLocalSearchParams();
+  const { postId, commentId } = useLocalSearchParams();
   const [post, setPost] = useState(null);
   const { user } = useAuth();
   const router = useRouter();
@@ -38,7 +39,7 @@ const PostDetails = () => {
   // console.log("got post id", postId);
 
   const handleNewComment = async (payload) => {
-  //  console.log("got new comment", payload.new);
+    //  console.log("got new comment", payload.new);
     if (payload.new) {
       let newComment = { ...payload.new };
       let res = await getUserData(newComment.userId);
@@ -93,6 +94,16 @@ const PostDetails = () => {
     let res = await createComment(data);
     setLoading(false);
     if (res.success) {
+      if (user.id != post.userId) {
+        //send notification
+        let notify = {
+          senderId: user.id,
+          receiverId: post.userId,
+          title: "commented on your post",
+          data: JSON.stringify({ postId: post.id, commentId: res?.data?.id }),
+        };
+        createNotification(notify)
+      }
       inputRef?.current?.clear();
       commentRef.current = "";
     } else {
@@ -101,7 +112,7 @@ const PostDetails = () => {
   };
 
   const onDeleteComment = async (comment) => {
-   // console.log("deleting comment: ", comment);
+    // console.log("deleting comment: ", comment);
     let res = await removeComment(comment?.id);
     if (res.success) {
       setPost((prevPost) => {
@@ -130,7 +141,7 @@ const PostDetails = () => {
   }
 
   const onDeletePost = async (item) => {
-   // console.log("delete post: ", item)
+    // console.log("delete post: ", item)
     let res = await removePost(post.id);
     if (res.success) {
       router.back();
@@ -141,7 +152,7 @@ const PostDetails = () => {
 
   const onEditPost = async (item) => {
     router.back();
-    router.push({pathname: 'newPost', params: {...item}})
+    router.push({ pathname: "newPost", params: { ...item } });
   };
 
   if (startLoading) {
@@ -201,6 +212,7 @@ const PostDetails = () => {
               key={comment?.id?.toString()}
               item={comment}
               onDelete={onDeleteComment}
+              highlight={comment.id ==commentId}
               canDelete={user.id == comment.userId || user.id == post.userId}
             />
           ))}

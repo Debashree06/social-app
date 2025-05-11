@@ -99,7 +99,8 @@ import Icon from "../assets/icons";
 const CommentItem = ({ 
     item, 
     canDelete = false ,
-    onDelete =()=>{}
+    onDelete =()=>{},
+    highlight = false
 }) => {
   const createdAt = moment(item?.created_at).format("MMM D");
 
@@ -121,7 +122,7 @@ const CommentItem = ({
   return (
     <View style={styles.row}>
       <Avatar uri={item?.user?.image} />
-      <View style={styles.bubble}>
+      <View style={[styles.bubble, highlight && styles.highlight]}>
         <View style={styles.headerRow}>
           <View style={styles.nameDate}>
             <Text style={styles.name}>{item?.user?.name}</Text>
@@ -179,5 +180,15 @@ const styles = StyleSheet.create({
       color: theme.colors.textDark,
       marginTop: 4,
     },
+    highlight:{
+      borderWidth: 0.2,
+      backgroundColor: 'white',
+      borderColor: theme.colors.dark,
+      shadowColor: theme.colors.dark,
+      shadowOffset: {width:0, height:0},
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation:5
+    }
   });
   
